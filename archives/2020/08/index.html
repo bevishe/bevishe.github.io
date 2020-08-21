@@ -1,9 +1,9 @@
-extends ./_layout.pug
-include ./_mixins/timeline.pug
+{% extends 'includes/layout.swig' %}
 
-block content
-  div.archive
-    div.archive-total
-      = site.posts.length === 0 ? __('page.posts-empty') : _p('page.posts-total', site.posts.length)
-
-    +timeline(theme.post_list.paginate.archives ? page.posts.data : site.posts.data)
+{% block body %}
+<div class="blog-main-post">
+	<div class="index-post-br"></div>
+  {% include 'includes/recent-posts.swig' %}
+  {% include 'includes/pagination.swig' %}
+ </div>
+{% endblock %}
