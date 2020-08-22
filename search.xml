@@ -65,4 +65,18 @@
         <tag>标签</tag>
       </tags>
   </entry>
+  <entry>
+    <title>测试</title>
+    <url>/2020/08/22/%E6%B5%8B%E8%AF%95/</url>
+    <content><![CDATA[<p><strong>问题：</strong>求公共自序列</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public class Main&#123;</span><br><span class="line">    </span><br><span class="line">    public static void method()&#123;</span><br><span class="line">        System.out.println(&quot;hello world!&quot;);</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    public static void main(String[] args)&#123;</span><br><span class="line">    </span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+]]></content>
+      <categories>
+        <category>java</category>
+      </categories>
+      <tags>
+        <tag>标签2</tag>
+      </tags>
+  </entry>
 </search>
