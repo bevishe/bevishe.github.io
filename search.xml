@@ -52,4 +52,17 @@
     <content><![CDATA[<p>这是一测试的md文件，第一个博客文件</p>
 ]]></content>
   </entry>
+  <entry>
+    <title>test3</title>
+    <url>/2020/08/22/test3/</url>
+    <content><![CDATA[<p>这是一个test3</p>
+]]></content>
+      <categories>
+        <category>java后台</category>
+      </categories>
+      <tags>
+        <tag>leetcode</tag>
+        <tag>标签</tag>
+      </tags>
+  </entry>
 </search>
