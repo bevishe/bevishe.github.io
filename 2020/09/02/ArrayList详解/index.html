@@ -292,12 +292,12 @@ window.addEventListener('DOMContentLoaded', function () {
 
   var gitalk = new Gitalk({
     id: md5(window.location.pathname.slice(1)),
-    clientID: '0b92f2564f2b14a8c5be',
-    clientSecret: '240b23fe7d2214abb67b5f6b02cc6337c19424b5',
+    clientID: '961d68b7fea7da2efd12',
+    clientSecret: '14d92a714689d78056ea98ae7feb076c353509f2',
     repo: 'blogTalk',
     owner: 'bevishe',
-    admin: [''],
-    distractionFreeMode: 'false',
+    admin: ['bevishe'],
+    distractionFreeMode: 'true',
     language: 'zh-CN'
   });
   gitalk.render('gitalk-container');
