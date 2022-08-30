@@ -1,0 +1,417 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="format-detection" content="telephone=no"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black"><link rel="icon" href="/images/icons/favicon-16x16.png?v=2.7.0" type="image/png" sizes="16x16"><link rel="icon" href="/images/icons/favicon-32x32.png?v=2.7.0" type="image/png" sizes="32x32"><meta name="description" content="概述：Hadoop是Apache软件基金会所开发的并行计算框架与分布式文件系统。其核心主要包括三个模块：Hadoop Common，HDFS与MapReduce。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Hadoop基础-HDFS基本原理">
+<meta property="og:url" content="http://bevishe.github.io/2022/02/18/Hadoop%E5%9F%BA%E7%A1%80-HDFS%E5%9F%BA%E6%9C%AC%E5%8E%9F%E7%90%86/index.html">
+<meta property="og:site_name" content="BevisHe">
+<meta property="og:description" content="概述：Hadoop是Apache软件基金会所开发的并行计算框架与分布式文件系统。其核心主要包括三个模块：Hadoop Common，HDFS与MapReduce。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://bevishe.oss-cn-hangzhou.aliyuncs.com/img/image-20210820105303943.png">
+<meta property="og:image" content="https://bevishe.oss-cn-hangzhou.aliyuncs.com/img/image-20210820105425780.png">
+<meta property="og:image" content="https://bevishe.oss-cn-hangzhou.aliyuncs.com/img/image-20210719134756064.png">
+<meta property="og:image" content="https://bevishe.oss-cn-hangzhou.aliyuncs.com/img/image-20210719134844464.png">
+<meta property="og:image" content="https://bevishe.oss-cn-hangzhou.aliyuncs.com/img/image-20210719134927858.png">
+<meta property="og:image" content="https://bevishe.oss-cn-hangzhou.aliyuncs.com/img/image-20210719141703198.png">
+<meta property="og:image" content="https://bevishe.oss-cn-hangzhou.aliyuncs.com/img/image-20210719142203781.png">
+<meta property="article:published_time" content="2022-02-18T08:26:52.000Z">
+<meta property="article:modified_time" content="2022-08-30T01:06:07.093Z">
+<meta property="article:author" content="BevisHe">
+<meta property="article:tag" content="bigData">
+<meta property="article:tag" content="hadoop">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://bevishe.oss-cn-hangzhou.aliyuncs.com/img/image-20210820105303943.png"><title>Hadoop基础-HDFS基本原理 | BevisHe</title><link ref="canonical" href="http://bevishe.github.io/2022/02/18/Hadoop%E5%9F%BA%E7%A1%80-HDFS%E5%9F%BA%E6%9C%AC%E5%8E%9F%E7%90%86/"><link rel="dns-prefetch" href="https://cdn.jsdelivr.net"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.12.1/css/all.min.css" type="text/css"><link rel="stylesheet" href="/css/index.css?v=2.7.0"><script>var Stun = window.Stun || {};
+var CONFIG = {
+  root: '/',
+  algolia: undefined,
+  assistSearch: undefined,
+  fontIcon: {"prompt":{"success":"fas fa-check-circle","info":"fas fa-arrow-circle-right","warning":"fas fa-exclamation-circle","error":"fas fa-times-circle"},"copyBtn":"fas fa-copy"},
+  sidebar: {"offsetTop":"20px","tocMaxDepth":6},
+  header: {"enable":true,"showOnPost":true,"scrollDownIcon":false},
+  postWidget: {"endText":true},
+  nightMode: {"enable":true},
+  back2top: {"enable":true},
+  codeblock: {"style":"default","highlight":"light","wordWrap":true},
+  reward: false,
+  fancybox: false,
+  zoomImage: {"gapAside":"20px"},
+  galleryWaterfall: undefined,
+  lazyload: false,
+  pjax: undefined,
+  externalLink: {"icon":{"enable":true,"name":"fas fa-external-link-alt"}},
+  shortcuts: undefined,
+  prompt: {"copyButton":"复制","copySuccess":"复制成功","copyError":"复制失败"},
+  sourcePath: {"js":"js","css":"css","images":"images"},
+};
+
+window.CONFIG = CONFIG;</script><meta name="generator" content="Hexo 6.2.0"></head><body><div class="container" id="container"><header class="header" id="header"><div class="header-inner"><nav class="header-nav header-nav--fixed"><div class="header-nav-inner"><div class="header-nav-menubtn"><i class="fas fa-bars"></i></div><div class="header-nav-menu"><div class="header-nav-menu-item"><a class="header-nav-menu-item__link" href="/"><span class="header-nav-menu-item__icon"><i class="fas fa-home"></i></span><span class="header-nav-menu-item__text">首页</span></a></div><div class="header-nav-menu-item"><a class="header-nav-menu-item__link" href="/categories/"><span class="header-nav-menu-item__icon"><i class="fas fa-folder-open"></i></span><span class="header-nav-menu-item__text">分类</span></a></div><div class="header-nav-menu-item"><a class="header-nav-menu-item__link" href="javascript:;" onclick="return false;"><span class="header-nav-menu-item__icon"><i class="fas fa-folder-open"></i></span><span class="header-nav-menu-item__text">基础</span></a><div class="header-nav-submenu"><div class="header-nav-submenu-item"><a class="header-nav-submenu-item__link" href="/categories/java/"><span class="header-nav-submenu-item__text">java基础</span></a></div><div class="header-nav-submenu-item"><a class="header-nav-submenu-item__link" href="/categories/dataStructure/"><span class="header-nav-submenu-item__text">数据结构</span></a></div><div class="header-nav-submenu-item"><a class="header-nav-submenu-item__link" href="/categories/computerNetwork/"><span class="header-nav-submenu-item__text">计算机网络</span></a></div><div class="header-nav-submenu-item"><a class="header-nav-submenu-item__link" href="/categories/os/"><span class="header-nav-submenu-item__text">操作系统</span></a></div><div class="header-nav-submenu-item"><a class="header-nav-submenu-item__link" href="/categories/linux/"><span class="header-nav-submenu-item__text">linux</span></a></div></div></div><div class="header-nav-menu-item"><a class="header-nav-menu-item__link" href="javascript:;" onclick="return false;"><span class="header-nav-menu-item__icon"><i class="fas fa-folder-open"></i></span><span class="header-nav-menu-item__text">后端技术</span></a><div class="header-nav-submenu"><div class="header-nav-submenu-item"><a class="header-nav-submenu-item__link" href="/categories/messageQueue/"><span class="header-nav-submenu-item__text">mq</span></a></div><div class="header-nav-submenu-item"><a class="header-nav-submenu-item__link" href="/categories/cache/"><span class="header-nav-submenu-item__text">缓存</span></a></div><div class="header-nav-submenu-item"><a class="header-nav-submenu-item__link" href="/categories/webService/"><span class="header-nav-submenu-item__text">web</span></a></div><div class="header-nav-submenu-item"><a class="header-nav-submenu-item__link" href="/categories/tool/"><span class="header-nav-submenu-item__text">工具</span></a></div></div></div><div class="header-nav-menu-item"><a class="header-nav-menu-item__link" href="javascript:;" onclick="return false;"><span class="header-nav-menu-item__icon"><i class="fas fa-folder-open"></i></span><span class="header-nav-menu-item__text">框架</span></a><div class="header-nav-submenu"><div class="header-nav-submenu-item"><a class="header-nav-submenu-item__link" href="/categories/spring/"><span class="header-nav-submenu-item__text">spring</span></a></div></div></div><div class="header-nav-menu-item"><a class="header-nav-menu-item__link" href="javascript:;" onclick="return false;"><span class="header-nav-menu-item__icon"><i class="fas fa-folder-open"></i></span><span class="header-nav-menu-item__text">大数据</span></a><div class="header-nav-submenu"><div class="header-nav-submenu-item"><a class="header-nav-submenu-item__link" href="/categories/hadoop/"><span class="header-nav-submenu-item__text">hadoop</span></a></div><div class="header-nav-submenu-item"><a class="header-nav-submenu-item__link" href="/categories/hbase/"><span class="header-nav-submenu-item__text">hbase</span></a></div><div class="header-nav-submenu-item"><a class="header-nav-submenu-item__link" href="/categories/hive/"><span class="header-nav-submenu-item__text">hive</span></a></div><div class="header-nav-submenu-item"><a class="header-nav-submenu-item__link" href="/categories/impala/"><span class="header-nav-submenu-item__text">impala</span></a></div><div class="header-nav-submenu-item"><a class="header-nav-submenu-item__link" href="/categories/kudu/"><span class="header-nav-submenu-item__text">kudu</span></a></div></div></div><div class="header-nav-menu-item"><a class="header-nav-menu-item__link" href="javascript:;" onclick="return false;"><span class="header-nav-menu-item__icon"><i class="fas fa-folder-open"></i></span><span class="header-nav-menu-item__text">算法</span></a><div class="header-nav-submenu"><div class="header-nav-submenu-item"><a class="header-nav-submenu-item__link" href="/categories/dynamicProgramming/"><span class="header-nav-submenu-item__text">动态规划</span></a></div></div></div><div class="header-nav-menu-item"><a class="header-nav-menu-item__link" href="javascript:;" onclick="return false;"><span class="header-nav-menu-item__icon"><i class="fas fa-folder-open"></i></span><span class="header-nav-menu-item__text">刷题</span></a><div class="header-nav-submenu"><div class="header-nav-submenu-item"><a class="header-nav-submenu-item__link" href="/categories/leetcode/"><span class="header-nav-submenu-item__text">leetcode</span></a></div><div class="header-nav-submenu-item"><a class="header-nav-submenu-item__link" href="/categories/nowcoder/"><span class="header-nav-submenu-item__text">牛客</span></a></div></div></div><div class="header-nav-menu-item"><a class="header-nav-menu-item__link" href="/tags/"><span class="header-nav-menu-item__icon"><i class="fas  fa-folder-open"></i></span><span class="header-nav-menu-item__text">Tags</span></a></div></div><div class="header-nav-search"><span class="header-nav-search__icon"><i class="fas fa-search"></i></span><span class="header-nav-search__text">搜索</span></div><div class="header-nav-mode"><div class="mode"><div class="mode-track"><span class="mode-track-moon"></span><span class="mode-track-sun"></span></div><div class="mode-thumb"></div></div></div></div></nav><div class="header-banner"><div class="header-banner-info"><div class="header-banner-info__title">BevisHe</div><div class="header-banner-info__subtitle"></div></div></div></div></header><main class="main" id="main"><div class="main-inner"><div class="content-wrap" id="content-wrap"><div class="content" id="content"><!-- Just used to judge whether it is an article page--><div id="is-post"></div><div class="post"><header class="post-header"><h1 class="post-title">Hadoop基础-HDFS基本原理</h1><div class="post-meta"><span class="post-meta-item post-meta-item--createtime"><span class="post-meta-item__icon"><i class="far fa-calendar-plus"></i></span><span class="post-meta-item__info">发表于</span><span class="post-meta-item__value">2022-02-18</span></span><span class="post-meta-item post-meta-item--updatetime"><span class="post-meta-item__icon"><i class="far fa-calendar-check"></i></span><span class="post-meta-item__info">更新于</span><span class="post-meta-item__value">2022-08-30</span></span></div></header><div class="post-body"><p>概述：Hadoop是Apache软件基金会所开发的并行计算框架与分布式文件系统。其核心主要包括三个模块：Hadoop Common，HDFS与MapReduce。</p>
+<span id="more"></span>
+
+        <h2 id="1-Hadoop-Common"   >
+          <a href="#1-Hadoop-Common" class="heading-link"><i class="fas fa-link"></i></a><a href="#1-Hadoop-Common" class="headerlink" title="1.Hadoop Common"></a>1.Hadoop Common</h2>
+      <hr>
+
+        <h2 id="2-HDFS"   >
+          <a href="#2-HDFS" class="heading-link"><i class="fas fa-link"></i></a><a href="#2-HDFS" class="headerlink" title="2.HDFS"></a>2.HDFS</h2>
+      <p>概述：hdfs是hadoop分布式文件系统（Hadoop Distributed File System）的缩写，为分布式计算存储提供底层支持。采用java语言编写，可以部署到多种普通的廉价机器上面，以集群处理数量积累达到大型主机处理性能。Hdfs架构原理采用master&#x2F;slave架构。一个HDFS集群包含一个单独的Name Node 和多个DataNode。NameNode管理的是元数据，而DataNode存储的是实际的数据。</p>
+
+        <h3 id="2-1-核心概念"   >
+          <a href="#2-1-核心概念" class="heading-link"><i class="fas fa-link"></i></a><a href="#2-1-核心概念" class="headerlink" title="2.1 核心概念"></a>2.1 核心概念</h3>
+      <ul>
+<li>1.Block</li>
+</ul>
+<p>物理磁盘中有块的概念，磁盘的物理block是磁盘操作的最小单位，一般为512Byte，文件系统的block是抽象在物理block之上的一般是物理block的数倍。通常为数kb，相对于单机系统而言，HDFS的block要大的多，默认的是128M，在hdfs中的文件会被拆分成block大小的chunk，chunk作为独立的单元存储，当存储比block小的文件时，只会占用实际的大小，如1m的文件占用的是1m的存储空间而不是128M。</p>
+<p>设置一个大的block主要是为了减少定位磁盘在整个查找数据中的时间占比。</p>
+<p>这种block的好处，这种拆分可以存储比整个磁盘容量还要打的文件，因为构成这个文件的block会分布在整个集群上面，理论上要给文件的block拆分到集群中所有的机器的磁盘上面。Block的抽象简化了存储系统，对于Block无需关注他的权限，所有者等内容，这些信息只需要在文件级别上进行控制，同时block也作为容错和高可用的机制中的副本单元，容错的发生是以block为单位进行复制。</p>
+<ul>
+<li>2.NameNode 和DateNode</li>
+</ul>
+<p>相关的已经在概述中进行了说明。</p>
+<p>同时nameNode 存放文件系统树和所有文件目录的元数据，元数据持久化主要是两个方式：</p>
+<ul>
+<li>namespace image</li>
+<li>edit log</li>
+</ul>
+<p>主要说明一点在HDFS中NameNode很容易成为集群的单点故障，从而造成整个集群的不可用，为了解决这个问题，主要有以下两个方法：</p>
+<ul>
+<li>a. 备份持久化元数据：将文件系统的元数据同时写到多个文件系统，例如同时将这些元数据保存到本地系统，这些备份的操作都是原子的，同步的。</li>
+<li>b.Second NameNode ： Second节点定期合并主Namenode的namespace image和edit log， 避免edit log过大，通过创建检查点checkpoint来合并。它会维护一个合并后的namespace image副本， 可用于在Namenode完全崩溃时恢复数据。</li>
+</ul>
+<p>对于DataNode来说主要负责存储和提取Block，读写请求可能来自nameNode也可以直接来与客户端，同时DateNode会周期性的向NameNode来提交上传自己的Block相关的信息。</p>
+<ul>
+<li>3.Block Cache</li>
+</ul>
+<p>对于DataNode经常从磁盘中读取的Block，会在内存中对该Block进行缓存，但是一个Block只会缓存一个数据节点上。</p>
+<ul>
+<li>4.HDFS Federation</li>
+</ul>
+<p>这种NameNode和DataNode主从的结构，NameNode的内存大小会制约文件的数量，当开启了HDFS Federation模型时，可以横向的对NameNode进行扩展，使用多个节点来分别管理namespace下面的一部分，例如一个nameNode管理&#x2F;user目录下面的文件，另外一个nameNode管理&#x2F;share目录下面的文件，这些所有的nameNode同时来维护一个BlockPool，保存Block中节点的映射信息。</p>
+<ul>
+<li>5.Hadoop的HA方案</li>
+</ul>
+<p>在hdfs集群中，namenode仍然是单点故障的，元数据同时写入到另外的文件系统和Seconde Namenode定期的进行checkpoint有利于保护数据丢失，但是并不能提高可用性。应为当NameNode挂掉之后，常规的做法都是使用元数据备份来重启要给新的那么Node，启动一个新的nameNode耗时会比较久，一般在几十分钟甚至到数个小时。</p>
+<p>造成重启耗时的原因大致有：<br>1） 元数据镜像文件载入到内存耗时较长。<br>2） 需要重放edit log<br>3） 需要收到来自DataNode的状态报告并且满足条件后才能离开安全模式提供写服务。</p>
+<p>1） 主备需共享edit log存储。<br>主NameNode和待命的NameNode共享一份edit log，当主备切换时，Standby通过回放edit log同步数据。<br>共享存储通常有2种选择</p>
+<p>NFS：传统的网络文件系统<br>QJM：quorum journal manager<br>QJM是专门为HDFS的HA实现而设计的，用来提供高可用的edit log。QJM运行一组journal node，edit log必须写到大部分的journal nodes。通常使用3个节点，因此允许一个节点失败，类似ZooKeeper。注意QJM没有使用ZK，虽然HDFS HA的确使用了ZK来选举主Namenode。一般推荐使用QJM。</p>
+<p>2）DataNode需要同时往主备发送Block Report<br>因为Block映射数据存储在内存中（不是在磁盘上），为了在Active NameNode挂掉之后，新的NameNode能够快速启动，不需要等待来自Datanode的Block Report，DataNode需要同时向主备两个NameNode发送Block Report。</p>
+<p>3）客户端需要配置failover模式（对用户透明）<br>Namenode的切换对客户端来说是无感知的，通过客户端库来实现。客户端在配置文件中使用的HDFS URI是逻辑路径，映射到一对Namenode地址。客户端会不断尝试每一个Namenode地址直到成功。</p>
+<p>4）Standby替代Secondary NameNode<br>如果没有启用HA，HDFS独立运行一个守护进程作为Secondary Namenode。定期checkpoint，合并镜像文件和edit日志。</p>
+<p>如果当主Namenode失败时，备份Namenode正在关机（停止 Standby），运维人员依然可以从头启动备份Namenode，这样比没有HA的时候更省事，算是一种改进，因为重启整个过程已经标准化到Hadoop内部，无需运维进行复杂的切换操作。</p>
+<p>NameNode的切换通过代failover controller来实现。failover controller有多种实现，默认实现使用ZooKeeper来保证只有一个Namenode处于active状态。</p>
+
+        <h2 id="2-2-HDFS数据的读写"   >
+          <a href="#2-2-HDFS数据的读写" class="heading-link"><i class="fas fa-link"></i></a><a href="#2-2-HDFS数据的读写" class="headerlink" title="2.2 HDFS数据的读写"></a>2.2 HDFS数据的读写</h2>
+      
+        <h3 id="1-读数据"   >
+          <a href="#1-读数据" class="heading-link"><i class="fas fa-link"></i></a><a href="#1-读数据" class="headerlink" title="1.读数据"></a>1.读数据</h3>
+      <p><img src="https://bevishe.oss-cn-hangzhou.aliyuncs.com/img/image-20210820105303943.png" alt="image-20210820105303943"></p>
+<p>1）客户端传递一个文件Path给FileSystem的open方法</p>
+<p>2）DFS采用RPC远程获取文件最开始的几个block的datanode地址。Namenode会根据网络拓扑结构决定返回哪些节点（前提是节点有block副本），如果客户端本身是Datanode并且节点上刚好有block副本，直接从本地读取。</p>
+<p>3）客户端使用open方法返回的FSDataInputStream对象读取数据（调用read方法）</p>
+<p>4）DFSInputStream（FSDataInputStream实现了改类）连接持有第一个block的、最近的节点，反复调用read方法读取数据</p>
+<p>5）第一个block读取完毕之后，寻找下一个block的最佳datanode，读取数据。如果有必要，DFSInputStream会联系Namenode获取下一批Block 的节点信息(存放于内存，不持久化），这些寻址过程对客户端都是不可见的。</p>
+<p>6）数据读取完毕，客户端调用close方法关闭流对象</p>
+<p>在读数据过程中，如果与Datanode的通信发生错误，DFSInputStream对象会尝试从下一个最佳节点读取数据，并且记住该失败节点， 后续Block的读取不会再连接该节点<br>读取一个Block之后，DFSInputStram会进行检验和验证，如果Block损坏，尝试从其他节点读取数据，并且将损坏的block汇报给Namenode。<br>客户端连接哪个datanode获取数据，是由namenode来指导的，这样可以支持大量并发的客户端请求，namenode尽可能将流量均匀分布到整个集群。<br>Block的位置信息是存储在namenode的内存中，因此相应位置请求非常高效，不会成为瓶颈。</p>
+
+        <h3 id="３．写文件"   >
+          <a href="#３．写文件" class="heading-link"><i class="fas fa-link"></i></a><a href="#３．写文件" class="headerlink" title="３．写文件"></a>３．写文件</h3>
+      <p><img src="https://bevishe.oss-cn-hangzhou.aliyuncs.com/img/image-20210820105425780.png" alt="image-20210820105425780"></p>
+<p>1）客户端调用DistributedFileSystem的create方法</p>
+<p>2）DistributedFileSystem远程RPC调用Namenode在文件系统的命名空间中创建一个新文件，此时该文件没有关联到任何block。 这个过程中，Namenode会做很多校验工作，例如是否已经存在同名文件，是否有权限，如果验证通过，返回一个FSDataOutputStream对象。 如果验证不通过，抛出异常到客户端。</p>
+<p>3）客户端写入数据的时候，DFSOutputStream分解为packets（数据包），并写入到一个数据队列中，该队列由DataStreamer消费。</p>
+<p>4）DateStreamer负责请求Namenode分配新的block存放的数据节点。这些节点存放同一个Block的副本，构成一个管道。 DataStreamer将packet写入到管道的第一个节点，第一个节点存放好packet之后，转发给下一个节点，下一个节点存放 之后继续往下传递。</p>
+<p>5）DFSOutputStream同时维护一个ack queue队列，等待来自datanode确认消息。当管道上的所有datanode都确认之后，packet从ack队列中移除。</p>
+<p>6）数据写入完毕，客户端close输出流。将所有的packet刷新到管道中，然后安心等待来自datanode的确认消息。全部得到确认之后告知Namenode文件是完整的。 Namenode此时已经知道文件的所有Block信息（因为DataStreamer是请求Namenode分配block的），只需等待达到最小副本数要求，然后返回成功信息给客户端。</p>
+<hr>
+
+        <h2 id="3-MapReduce"   >
+          <a href="#3-MapReduce" class="heading-link"><i class="fas fa-link"></i></a><a href="#3-MapReduce" class="headerlink" title="3.MapReduce"></a>3.MapReduce</h2>
+      <p>计算一定时间类的最大温度：</p>
+<p>Map程序：</p>
+<p><img src="https://bevishe.oss-cn-hangzhou.aliyuncs.com/img/image-20210719134756064.png" alt="image-20210719134756064"></p>
+<p>Reduce程序：</p>
+<p><img src="https://bevishe.oss-cn-hangzhou.aliyuncs.com/img/image-20210719134844464.png" alt="image-20210719134844464"></p>
+<p><img src="https://bevishe.oss-cn-hangzhou.aliyuncs.com/img/image-20210719134927858.png" alt="image-20210719134927858"></p>
+<p>通过构造JobConf对象来控制实现我们的mapreduce任务，在hadoop集群上执行这个任务时，需要将代码打成要给jar包，在JobConf中传递该类的Class类型，通过调用FiileInpuFormat类的静态函数addInputPath()来定义输入数据的路径，可以是单个文件也可以是目录，将会输入目录下的所有文件。通过调用setOutputPath()来设置reduce函数输出文件的目录，必须是不存在的目录，否则会报错。setMapperClass 和setReducerClass是指定map和reduce类的类型，</p>
+<p><img src="https://bevishe.oss-cn-hangzhou.aliyuncs.com/img/image-20210719141703198.png" alt="image-20210719141703198"></p>
+<p>一个reduce任务的完整流程如图，虚线框表示节点，虚线箭头表示节点内部的数据传输，实线箭头表示节点之间的数据传输。reduce任务的数量不是输入数据的大小决定的，而是特别指定的。如果有多个reduce任务的时候，map任务会将结果进行分区，map的结果键值对要输入到一个reduce节上的会存放在同一个分区中。同时分区由用户定义的分区函数来控制。</p>
+<p><img src="https://bevishe.oss-cn-hangzhou.aliyuncs.com/img/image-20210719142203781.png" alt="image-20210719142203781"></p>
+</div><footer class="post-footer"><div class="post-ending ending"><div class="ending__text">------ 本文结束，感谢您的阅读 ------</div></div><div class="post-copyright copyright"><div class="copyright-author"><span class="copyright-author__name">本文作者: </span><span class="copyright-author__value"><a href="http://bevishe.github.io">BevisHe</a></span></div><div class="copyright-link"><span class="copyright-link__name">本文链接: </span><span class="copyright-link__value"><a href="http://bevishe.github.io/2022/02/18/Hadoop%E5%9F%BA%E7%A1%80-HDFS%E5%9F%BA%E6%9C%AC%E5%8E%9F%E7%90%86/">http://bevishe.github.io/2022/02/18/Hadoop%E5%9F%BA%E7%A1%80-HDFS%E5%9F%BA%E6%9C%AC%E5%8E%9F%E7%90%86/</a></span></div><div class="copyright-notice"><span class="copyright-notice__name">版权声明: </span><span class="copyright-notice__value">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh-cn" rel="external nofollow" target="_blank">BY-NC-SA</a> 许可协议。转载请注明出处！</span></div></div><div class="post-tags"><span class="post-tags-item"><span class="post-tags-item__icon"><i class="fas fa-tag"></i></span><a class="post-tags-item__link" href="http://bevishe.github.io/tags/bigData/">bigData</a></span><span class="post-tags-item"><span class="post-tags-item__icon"><i class="fas fa-tag"></i></span><a class="post-tags-item__link" href="http://bevishe.github.io/tags/hadoop/">hadoop</a></span></div><nav class="post-paginator paginator"><div class="paginator-prev"><a class="paginator-prev__link" href="/2022/03/03/redis%E5%9F%BA%E6%9C%AC%E5%91%BD%E4%BB%A4%E4%BD%BF%E7%94%A8/"><span class="paginator-prev__icon"><i class="fas fa-angle-left"></i></span><span class="paginator-prev__text">redis基本命令使用</span></a></div><div class="paginator-next"><a class="paginator-next__link" href="/2022/02/17/MQ%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97%EF%BC%881%EF%BC%89/"><span class="paginator-prev__text">MQ消息队列（1）</span><span class="paginator-next__icon"><i class="fas fa-angle-right"></i></span></a></div></nav></footer></div></div></div><div class="sidebar-wrap" id="sidebar-wrap"><aside class="sidebar" id="sidebar"><div class="sidebar-nav"><span class="sidebar-nav-toc current">文章目录</span><span class="sidebar-nav-ov">站点概览</span></div><section class="sidebar-toc"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-Hadoop-Common"><span class="toc-number">1.</span> <span class="toc-text">
+          1.Hadoop Common</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-HDFS"><span class="toc-number">2.</span> <span class="toc-text">
+          2.HDFS</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-%E6%A0%B8%E5%BF%83%E6%A6%82%E5%BF%B5"><span class="toc-number">2.1.</span> <span class="toc-text">
+          2.1 核心概念</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-2-HDFS%E6%95%B0%E6%8D%AE%E7%9A%84%E8%AF%BB%E5%86%99"><span class="toc-number">3.</span> <span class="toc-text">
+          2.2 HDFS数据的读写</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-%E8%AF%BB%E6%95%B0%E6%8D%AE"><span class="toc-number">3.1.</span> <span class="toc-text">
+          1.读数据</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%EF%BC%93%EF%BC%8E%E5%86%99%E6%96%87%E4%BB%B6"><span class="toc-number">3.2.</span> <span class="toc-text">
+          ３．写文件</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-MapReduce"><span class="toc-number">4.</span> <span class="toc-text">
+          3.MapReduce</span></a></li></ol></section><!-- ov = overview--><section class="sidebar-ov hide"><div class="sidebar-ov-author"><div class="sidebar-ov-author__avatar"><img class="sidebar-ov-author__avatar_img" src="/images/icons/stun-logo.svg" alt="avatar"></div><p class="sidebar-ov-author__text">hello world</p></div><div class="sidebar-ov-state"><a class="sidebar-ov-state-item sidebar-ov-state-item--categories" href="/categories/"><div class="sidebar-ov-state-item__count">11</div><div class="sidebar-ov-state-item__name">分类</div></a><a class="sidebar-ov-state-item sidebar-ov-state-item--tags" href="/tags/"><div class="sidebar-ov-state-item__count">11</div><div class="sidebar-ov-state-item__name">标签</div></a></div><div class="sidebar-ov-cc"><a href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh-cn" target="_blank" rel="noopener" data-popover="知识共享许可协议" data-popover-pos="up"><img src="/images/cc-by-nc-sa.svg"></a></div></section><div class="sidebar-reading"><div class="sidebar-reading-info"><span class="sidebar-reading-info__text">你已阅读了 </span><span class="sidebar-reading-info__num">0</span><span class="sidebar-reading-info__perc">%</span></div><div class="sidebar-reading-line"></div></div></aside></div><div class="clearfix"></div></div></main><footer class="footer" id="footer"><div class="footer-inner"><div><span>Copyright © 2022</span><span class="footer__icon"><i class="fas fa-heart"></i></span><span>BevisHe</span></div><div><span>由 <a href="http://hexo.io/" title="Hexo" target="_blank" rel="noopener">Hexo</a> 强力驱动</span><span> v6.2.0</span><span class="footer__devider">|</span><span>主题 - <a href="https://github.com/liuyib/hexo-theme-stun/" title="Stun" target="_blank" rel="noopener">Stun</a></span><span> v2.7.0</span></div></div></footer><div class="loading-bar" id="loading-bar"><div class="loading-bar__progress"></div></div><div class="back2top" id="back2top"><span class="back2top__icon"><i class="fas fa-rocket"></i></span></div></div><div class="search-mask"></div><div class="search-popup"><span class="search-close"></span><div class="search-input"><input placeholder="搜索文章（支持多关键词，请用空格分隔）"></div><div class="search-results"></div></div><script src="https://cdn.jsdelivr.net/npm/jquery@v3.4.1/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-animate@1.5.2/velocity.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-animate@1.5.2/velocity.ui.min.js"></script><script>function initSearch() {
+  var isXML = true;
+  var search_path = 'search.json';
+
+  if (!search_path) {
+    search_path = 'search.xml';
+  } else if (/json$/i.test(search_path)) {
+    isXML = false;
+  }
+
+  var path = '/' + search_path;
+  $.ajax({
+    url: path,
+    dataType: isXML ? 'xml' : 'json',
+    async: true,
+    success: function (res) {
+      var datas = isXML ? $('entry', res).map(function () {
+        // 将 XML 转为 JSON
+        return {
+          title: $('title', this).text(),
+          content: $('content', this).text(),
+          url: $('url', this).text()
+        };
+      }).get() : res;
+      var $input = $('.search-input input');
+      var $result = $('.search-results');
+      // 搜索对象（标题、内容）的权重，影响显示顺序
+      var WEIGHT = { title: 100, content: 1 };
+      var searchPost = function () {
+        var searchText = $input.val().toLowerCase().trim();
+        // 根据空白字符分隔关键字
+        var keywords = searchText.split(/[\s]+/);
+        // 搜索结果
+        var matchPosts = [];
+
+        // 有多个关键字时，将原文字整个保存下来
+        if (keywords.length > 1) {
+          keywords.push(searchText);
+        }
+        // 防止未输入字符时搜索
+        if (searchText.length > 0) {
+          datas.forEach(function (data) {
+            var isMatch  = false;
+            // 没有标题的文章使用预设的 i18n 变量代替
+            var title = (data.title && data.title.trim()) || '[ 文章无标题 ]';
+            var titleLower = title && title.toLowerCase();
+            // 删除 HTML 标签 和 所有空白字符
+            var content = data.content && data.content.replace(/<[^>]+>/g, '');
+            var contentLower = content && content.toLowerCase();
+            // 删除重复的 /
+            var postURL = data.url && decodeURI(data.url).replace(/\/{2,}/g, '/');
+            // 标题中匹配到的关键词
+            var titleHitSlice = [];
+            // 内容中匹配到的关键词
+            var contentHitSlice = [];
+
+            keywords.forEach(function (keyword) {
+              /**
+              * 获取匹配的关键词的索引
+              * @param {String} keyword 要匹配的关键字
+              * @param {String} text 原文字
+              * @param {Boolean} caseSensitive 是否区分大小写
+              * @param {Number} weight 匹配对象的权重。权重大的优先显示
+              * @return {Array}
+              */
+              function getIndexByword (word, text, caseSensitive, weight) {
+                if (!word || !text) {
+                  return [];
+                };
+
+                var startIndex = 0; // 每次匹配的开始索引
+                var index = -1;     // 匹配到的索引值
+                var result = [];    // 匹配结果
+
+                if (!caseSensitive) {
+                  word = word.toLowerCase();
+                  text = text.toLowerCase();
+                }
+
+                while((index = text.indexOf(word, startIndex)) !== -1) {
+                  var hasMatch = false;
+                  // 索引位置相同的关键词，保留长度较长的
+                  titleHitSlice.forEach(function (hit) {
+                    if (hit.index === index && hit.word.length < word.length) {
+                      hit.word = word;
+                      hasMatch = true;
+                    }
+                  });
+                  startIndex = index + word.length;
+                  !hasMatch && result.push({ index: index, word: word, weight: weight });
+                }
+                return result;
+              }
+              titleHitSlice = titleHitSlice.concat(getIndexByword(keyword, titleLower, false, WEIGHT.title));
+              contentHitSlice = contentHitSlice.concat(getIndexByword(keyword, contentLower, false, WEIGHT.content));
+            });
+
+            var hitTitle = titleHitSlice.length;
+            var hitContent = contentHitSlice.length;
+
+            if (hitTitle > 0 || hitContent > 0) {
+              isMatch = true;
+            }
+            if (isMatch) {
+              ;[titleHitSlice, contentHitSlice].forEach(function (hit) {
+                // 按照匹配文字的索引的递增顺序排序
+                hit.sort(function (left, right) {
+                  return left.index - right.index;
+                });
+              });
+              /**
+              * 给文本中匹配到的关键词添加标记，从而进行高亮显示
+              * @param {String} text 原文本
+              * @param {Array} hitSlice 匹配项的索引信息
+              * @param {Number} start 开始索引
+              * @param {Number} end 结束索引
+              * @return {String}
+              */
+              function highlightKeyword (text, hitSlice, start, end) {
+                if (!text || !hitSlice || !hitSlice.length) {
+                  return;
+                }
+
+                var result = '';
+                var startIndex = start;
+                var endIndex = end;
+                hitSlice.forEach(function (hit) {
+                  if (hit.index < startIndex) {
+                    return;
+                  }
+
+                  var hitWordEnd = hit.index + hit.word.length;
+                  result += text.slice(startIndex, hit.index);
+                  result += '<b>' + text.slice(hit.index, hitWordEnd) + '</b>';
+                  startIndex = hitWordEnd;
+                });
+                result += text.slice(startIndex, endIndex);
+                return result;
+              }
+
+              var postData = {};
+              // 文章总的搜索权重
+              var postWeight = titleHitSlice.length * WEIGHT.title + contentHitSlice.length * WEIGHT.content;
+              // 标记匹配关键词后的标题
+              var postTitle = highlightKeyword(title, titleHitSlice, 0, title.length) || title;
+              // 标记匹配关键词后的内容
+              var postContent;
+              // 显示内容的长度
+              var SHOW_WORD_LENGTH = 200;
+              // 命中关键词前的字符显示长度
+              var SHOW_WORD_FRONT_LENGTH = 20;
+              var SHOW_WORD_END_LENGTH = SHOW_WORD_LENGTH - SHOW_WORD_FRONT_LENGTH;
+
+              // 截取匹配的第一个字符，前后共 200 个字符来显示
+              if (contentHitSlice.length > 0) {
+                var firstIndex = contentHitSlice[0].index;
+                var start = firstIndex > SHOW_WORD_FRONT_LENGTH ? firstIndex - SHOW_WORD_FRONT_LENGTH : 0;
+                var end = firstIndex + SHOW_WORD_END_LENGTH;
+                postContent = highlightKeyword(content, contentHitSlice, start, end);
+              } else { // 未匹配到内容，直接截取前 200 个字符来显示
+                postContent = content.slice(0, SHOW_WORD_LENGTH);
+              }
+              postData.title = postTitle;
+              postData.content = postContent;
+              postData.url = postURL;
+              postData.weight = postWeight;
+              matchPosts.push(postData);
+            }
+          });
+        }
+
+        var resultInnerHtml = '';
+        if (matchPosts.length) {
+          // 按权重递增的顺序排序，使权重大的优先显示
+          matchPosts.sort(function (left, right) {
+            return right.weight - left.weight;
+          });
+          resultInnerHtml += '<ul>';
+          matchPosts.forEach(function (post) {
+            resultInnerHtml += '<li><a class="search-results-title" href="' + post.url + '">';
+            resultInnerHtml += post.title;
+            resultInnerHtml += '</a><div class="search-results-content">';
+            resultInnerHtml += post.content;
+            resultInnerHtml += '</div></li>';
+          });
+          resultInnerHtml += '</ul>';
+        } else {
+          resultInnerHtml += '<div class="search-results-none"><i class="far fa-meh"></i></div>';
+        }
+        $result.html(resultInnerHtml);
+      };
+      $input.on('input', searchPost);
+      $input.on('keyup', function (e) {
+        if (e.keyCode === Stun.utils.codeToKeyCode('Enter')) {
+          searchPost();
+        }
+      });
+    }
+  });
+}
+
+function closeSearch () {
+  $('body').css({ overflow: 'auto' });
+  $('.search-popup').css({ display: 'none' });
+  $('.search-mask').css({ display: 'none' });
+}
+
+window.addEventListener('DOMContentLoaded', function () {
+  Stun.utils.pjaxReloadLocalSearch = function () {
+    $('.header-nav-search').on('click', function (e) {
+      e.stopPropagation();
+      $('body').css('overflow', 'hidden');
+      $('.search-popup')
+        .velocity('stop')
+        .velocity('transition.expandIn', {
+          duration: 300,
+          complete: function () {
+            $('.search-popup input').focus();
+          }
+        });
+      $('.search-mask')
+        .velocity('stop')
+        .velocity('transition.fadeIn', {
+          duration: 300
+        });
+
+      initSearch();
+    });
+    $('.search-mask, .search-close').on('click', function () {
+      closeSearch();
+    });
+    $(document).on('keydown', function (e) {
+      // Escape <=> 27
+      if (e.keyCode === Stun.utils.codeToKeyCode('Escape')) {
+        closeSearch();
+      }
+    });
+  };
+
+  Stun.utils.pjaxReloadLocalSearch();
+}, false);
+
+function safeOpenUrl(url) {
+  var newTab = window.open();
+  newTab.opener = null;
+  newTab.location = url;
+}
+
+function extSearch(engine) {
+  var engines = {
+    google: 'https://www.google.com/search?q=',
+    bing: 'https://cn.bing.com/search?q=',
+    baidu: 'https://www.baidu.com/s?ie=UTF-8&wd=',
+  };
+  var host = window.location.host;
+  var query = $('.search-input input').val().toLowerCase().trim();
+  var uri = engines[engine] + query + ' site:' + host;
+
+  if (query) {
+    safeOpenUrl(uri);
+  } else {
+    Stun.utils.popAlert('warning', '请输入字符');
+  }
+}
+
+var assistSearchList = window.CONFIG.assistSearch;
+
+if (Array.isArray(assistSearchList)) {
+  assistSearchList.forEach(function (name) {
+    document.querySelector('.search-btns-item--' + name).addEventListener('click', function () {
+      extSearch(name);
+    }, false);
+  });
+}</script><script src="/js/utils.js?v=2.7.0"></script><script src="/js/stun-boot.js?v=2.7.0"></script><script src="/js/scroll.js?v=2.7.0"></script><script src="/js/header.js?v=2.7.0"></script><script src="/js/sidebar.js?v=2.7.0"></script><script type="application/json" src="/search.json"></script></body></html>

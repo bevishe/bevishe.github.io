@@ -1,0 +1,437 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="format-detection" content="telephone=no"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black"><link rel="icon" href="/images/icons/favicon-16x16.png?v=2.7.0" type="image/png" sizes="16x16"><link rel="icon" href="/images/icons/favicon-32x32.png?v=2.7.0" type="image/png" sizes="32x32"><meta name="description" content="1.RabbitMQ概述       消息队列（Message Queue）起源于一位来自MIT的硬件设计工作者Vivek Randive,其设想一种通用的软件总线，类似电路板上的总线一样，可以供其他软件接入。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="MQ消息队列（2）RabbitMQ-AMQP">
+<meta property="og:url" content="http://bevishe.github.io/2022/02/17/MQ%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97%EF%BC%882%EF%BC%89RabbitMQ-AMQP/index.html">
+<meta property="og:site_name" content="BevisHe">
+<meta property="og:description" content="1.RabbitMQ概述       消息队列（Message Queue）起源于一位来自MIT的硬件设计工作者Vivek Randive,其设想一种通用的软件总线，类似电路板上的总线一样，可以供其他软件接入。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://bevishe.oss-cn-hangzhou.aliyuncs.com/img/20220118155221.png">
+<meta property="og:image" content="https://bevishe.oss-cn-hangzhou.aliyuncs.com/img/20220118150124.png">
+<meta property="og:image" content="https://bevishe.oss-cn-hangzhou.aliyuncs.com/img/20220118151156.png">
+<meta property="og:image" content="https://bevishe.oss-cn-hangzhou.aliyuncs.com/img/20220118152332.png">
+<meta property="article:published_time" content="2022-02-17T01:00:54.000Z">
+<meta property="article:modified_time" content="2022-08-30T01:06:07.093Z">
+<meta property="article:author" content="BevisHe">
+<meta property="article:tag" content="rabbitMq">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://bevishe.oss-cn-hangzhou.aliyuncs.com/img/20220118155221.png"><title>MQ消息队列（2）RabbitMQ-AMQP | BevisHe</title><link ref="canonical" href="http://bevishe.github.io/2022/02/17/MQ%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97%EF%BC%882%EF%BC%89RabbitMQ-AMQP/"><link rel="dns-prefetch" href="https://cdn.jsdelivr.net"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.12.1/css/all.min.css" type="text/css"><link rel="stylesheet" href="/css/index.css?v=2.7.0"><script>var Stun = window.Stun || {};
+var CONFIG = {
+  root: '/',
+  algolia: undefined,
+  assistSearch: undefined,
+  fontIcon: {"prompt":{"success":"fas fa-check-circle","info":"fas fa-arrow-circle-right","warning":"fas fa-exclamation-circle","error":"fas fa-times-circle"},"copyBtn":"fas fa-copy"},
+  sidebar: {"offsetTop":"20px","tocMaxDepth":6},
+  header: {"enable":true,"showOnPost":true,"scrollDownIcon":false},
+  postWidget: {"endText":true},
+  nightMode: {"enable":true},
+  back2top: {"enable":true},
+  codeblock: {"style":"default","highlight":"light","wordWrap":true},
+  reward: false,
+  fancybox: false,
+  zoomImage: {"gapAside":"20px"},
+  galleryWaterfall: undefined,
+  lazyload: false,
+  pjax: undefined,
+  externalLink: {"icon":{"enable":true,"name":"fas fa-external-link-alt"}},
+  shortcuts: undefined,
+  prompt: {"copyButton":"复制","copySuccess":"复制成功","copyError":"复制失败"},
+  sourcePath: {"js":"js","css":"css","images":"images"},
+};
+
+window.CONFIG = CONFIG;</script><meta name="generator" content="Hexo 6.2.0"></head><body><div class="container" id="container"><header class="header" id="header"><div class="header-inner"><nav class="header-nav header-nav--fixed"><div class="header-nav-inner"><div class="header-nav-menubtn"><i class="fas fa-bars"></i></div><div class="header-nav-menu"><div class="header-nav-menu-item"><a class="header-nav-menu-item__link" href="/"><span class="header-nav-menu-item__icon"><i class="fas fa-home"></i></span><span class="header-nav-menu-item__text">首页</span></a></div><div class="header-nav-menu-item"><a class="header-nav-menu-item__link" href="/categories/"><span class="header-nav-menu-item__icon"><i class="fas fa-folder-open"></i></span><span class="header-nav-menu-item__text">分类</span></a></div><div class="header-nav-menu-item"><a class="header-nav-menu-item__link" href="javascript:;" onclick="return false;"><span class="header-nav-menu-item__icon"><i class="fas fa-folder-open"></i></span><span class="header-nav-menu-item__text">基础</span></a><div class="header-nav-submenu"><div class="header-nav-submenu-item"><a class="header-nav-submenu-item__link" href="/categories/java/"><span class="header-nav-submenu-item__text">java基础</span></a></div><div class="header-nav-submenu-item"><a class="header-nav-submenu-item__link" href="/categories/dataStructure/"><span class="header-nav-submenu-item__text">数据结构</span></a></div><div class="header-nav-submenu-item"><a class="header-nav-submenu-item__link" href="/categories/computerNetwork/"><span class="header-nav-submenu-item__text">计算机网络</span></a></div><div class="header-nav-submenu-item"><a class="header-nav-submenu-item__link" href="/categories/os/"><span class="header-nav-submenu-item__text">操作系统</span></a></div><div class="header-nav-submenu-item"><a class="header-nav-submenu-item__link" href="/categories/linux/"><span class="header-nav-submenu-item__text">linux</span></a></div></div></div><div class="header-nav-menu-item"><a class="header-nav-menu-item__link" href="javascript:;" onclick="return false;"><span class="header-nav-menu-item__icon"><i class="fas fa-folder-open"></i></span><span class="header-nav-menu-item__text">后端技术</span></a><div class="header-nav-submenu"><div class="header-nav-submenu-item"><a class="header-nav-submenu-item__link" href="/categories/messageQueue/"><span class="header-nav-submenu-item__text">mq</span></a></div><div class="header-nav-submenu-item"><a class="header-nav-submenu-item__link" href="/categories/cache/"><span class="header-nav-submenu-item__text">缓存</span></a></div><div class="header-nav-submenu-item"><a class="header-nav-submenu-item__link" href="/categories/webService/"><span class="header-nav-submenu-item__text">web</span></a></div><div class="header-nav-submenu-item"><a class="header-nav-submenu-item__link" href="/categories/tool/"><span class="header-nav-submenu-item__text">工具</span></a></div></div></div><div class="header-nav-menu-item"><a class="header-nav-menu-item__link" href="javascript:;" onclick="return false;"><span class="header-nav-menu-item__icon"><i class="fas fa-folder-open"></i></span><span class="header-nav-menu-item__text">框架</span></a><div class="header-nav-submenu"><div class="header-nav-submenu-item"><a class="header-nav-submenu-item__link" href="/categories/spring/"><span class="header-nav-submenu-item__text">spring</span></a></div></div></div><div class="header-nav-menu-item"><a class="header-nav-menu-item__link" href="javascript:;" onclick="return false;"><span class="header-nav-menu-item__icon"><i class="fas fa-folder-open"></i></span><span class="header-nav-menu-item__text">大数据</span></a><div class="header-nav-submenu"><div class="header-nav-submenu-item"><a class="header-nav-submenu-item__link" href="/categories/hadoop/"><span class="header-nav-submenu-item__text">hadoop</span></a></div><div class="header-nav-submenu-item"><a class="header-nav-submenu-item__link" href="/categories/hbase/"><span class="header-nav-submenu-item__text">hbase</span></a></div><div class="header-nav-submenu-item"><a class="header-nav-submenu-item__link" href="/categories/hive/"><span class="header-nav-submenu-item__text">hive</span></a></div><div class="header-nav-submenu-item"><a class="header-nav-submenu-item__link" href="/categories/impala/"><span class="header-nav-submenu-item__text">impala</span></a></div><div class="header-nav-submenu-item"><a class="header-nav-submenu-item__link" href="/categories/kudu/"><span class="header-nav-submenu-item__text">kudu</span></a></div></div></div><div class="header-nav-menu-item"><a class="header-nav-menu-item__link" href="javascript:;" onclick="return false;"><span class="header-nav-menu-item__icon"><i class="fas fa-folder-open"></i></span><span class="header-nav-menu-item__text">算法</span></a><div class="header-nav-submenu"><div class="header-nav-submenu-item"><a class="header-nav-submenu-item__link" href="/categories/dynamicProgramming/"><span class="header-nav-submenu-item__text">动态规划</span></a></div></div></div><div class="header-nav-menu-item"><a class="header-nav-menu-item__link" href="javascript:;" onclick="return false;"><span class="header-nav-menu-item__icon"><i class="fas fa-folder-open"></i></span><span class="header-nav-menu-item__text">刷题</span></a><div class="header-nav-submenu"><div class="header-nav-submenu-item"><a class="header-nav-submenu-item__link" href="/categories/leetcode/"><span class="header-nav-submenu-item__text">leetcode</span></a></div><div class="header-nav-submenu-item"><a class="header-nav-submenu-item__link" href="/categories/nowcoder/"><span class="header-nav-submenu-item__text">牛客</span></a></div></div></div><div class="header-nav-menu-item"><a class="header-nav-menu-item__link" href="/tags/"><span class="header-nav-menu-item__icon"><i class="fas  fa-folder-open"></i></span><span class="header-nav-menu-item__text">Tags</span></a></div></div><div class="header-nav-search"><span class="header-nav-search__icon"><i class="fas fa-search"></i></span><span class="header-nav-search__text">搜索</span></div><div class="header-nav-mode"><div class="mode"><div class="mode-track"><span class="mode-track-moon"></span><span class="mode-track-sun"></span></div><div class="mode-thumb"></div></div></div></div></nav><div class="header-banner"><div class="header-banner-info"><div class="header-banner-info__title">BevisHe</div><div class="header-banner-info__subtitle"></div></div></div></div></header><main class="main" id="main"><div class="main-inner"><div class="content-wrap" id="content-wrap"><div class="content" id="content"><!-- Just used to judge whether it is an article page--><div id="is-post"></div><div class="post"><header class="post-header"><h1 class="post-title">MQ消息队列（2）RabbitMQ-AMQP</h1><div class="post-meta"><span class="post-meta-item post-meta-item--createtime"><span class="post-meta-item__icon"><i class="far fa-calendar-plus"></i></span><span class="post-meta-item__info">发表于</span><span class="post-meta-item__value">2022-02-17</span></span><span class="post-meta-item post-meta-item--updatetime"><span class="post-meta-item__icon"><i class="far fa-calendar-check"></i></span><span class="post-meta-item__info">更新于</span><span class="post-meta-item__value">2022-08-30</span></span></div></header><div class="post-body">
+        <h2 id="1-RabbitMQ概述"   >
+          <a href="#1-RabbitMQ概述" class="heading-link"><i class="fas fa-link"></i></a><a href="#1-RabbitMQ概述" class="headerlink" title="1.RabbitMQ概述"></a>1.RabbitMQ概述</h2>
+      <p>消息队列（Message Queue）起源于一位来自MIT的硬件设计工作者Vivek Randive,其设想一种通用的软件总线，类似电路板上的总线一样，可以供其他软件接入。<span id="more"></span>Vivek在1983年成立了Teknekron公司，高盛等公司作为第一批在金融中使用Teknekorn的软件，同时还诞生了第一代消息队列软件：Teknekron的TIB(THE Information Bus).  </p>
+<p>&amp;emsp;&amp;emsp;Teknekron的TIB可以让开发者建立一系列的规则去描述消息内容，只需要将消息按照这个规则发送出去，任何消费者只要订阅了当前的内容，就可以接受到这些发送的消息，从而让生产者和消费者完全解耦，同时可以在消息的传递过程中灵活的结合。这个软件后来后来就受到了电信行业特别是新闻机构的注意。1995年路透社收购了Teknekron公司。  </p>
+<p>&amp;emsp;&amp;emsp;由于消息队列在金融交易中取得的不错的反响。1990年开始IBM公司也开始研制自己的消息队列软件（IBM MQ），并且逐步发展成为WebSphereMQ同时占领着广阔的商业消息队列平台市场。于此同时，微软也开始了消息队列的研制MSMS（Microsoft Message Queue）应运而生，随着众多厂商参与MQ的研制，同时带来了一个问题，各个厂商的MQ无法进行互通。为了解决这个问题，JMS（java message service）在2001年诞生了，其试图通过提供公共java API的方式来隐藏各个供应商提供的MQ实际的接口，从而解决各个MQ之间互通的问题，但是由于使用单独的标准化接口来胶合不同的接口应用程序反而变的更加脆弱，最终失败了。    </p>
+<p>&amp;emsp;&amp;emsp;但在2004年JPMorgan Chase和IMatix公司一起合作开发了Advanced Message Queueing Protocl（AMQP,高级消息队列协议）,从一开始就设计成一个开放标准协议，任何公司都可以使用这个协议来设计自己的MQ产品，这样任何使用这种协议的MQ就可以进行互通使用。RabbitMQ就是基于AMQP协议进行的一个MQ实现。</p>
+
+        <h2 id="2-AMQP（Advanced-Message-Queuing-Protocol）高级消息队列协议"   >
+          <a href="#2-AMQP（Advanced-Message-Queuing-Protocol）高级消息队列协议" class="heading-link"><i class="fas fa-link"></i></a><a href="#2-AMQP（Advanced-Message-Queuing-Protocol）高级消息队列协议" class="headerlink" title="2.AMQP（Advanced Message Queuing Protocol）高级消息队列协议"></a>2.AMQP（Advanced Message Queuing Protocol）高级消息队列协议</h2>
+      
+        <h3 id="2-1-AMQP协议简介"   >
+          <a href="#2-1-AMQP协议简介" class="heading-link"><i class="fas fa-link"></i></a><a href="#2-1-AMQP协议简介" class="headerlink" title="2.1 AMQP协议简介"></a>2.1 AMQP协议简介</h3>
+      <p>&amp;emsp;&amp;emsp;AMQP(advanced message queue protocol)高级消息队列协议,是一个公开的应用层协议标准，基于此协议可以实现客户端和中间件传递消息并不受客户端和消息中间件的不同产品，不同语言的制约。以下简单介绍一些其中的重要组成：    </p>
+<p><img src="https://bevishe.oss-cn-hangzhou.aliyuncs.com/img/20220118155221.png" alt="20220118155221"><br>&amp;emsp;&amp;emsp;由于amqp是一种网络协议，所以这个过程中的生产者，消费者，消费代理可以存在于不同的设备之上。AMQP 0-9-1的工作流程如上，消息和发布者发送给交换机，交换机通常被比喻成邮局，然后交换机将收到的消息根据路由规则发给绑定的队列，最后AMQP代理会将消息投递给订阅了当前队列的消费或者消费者按照自己的需求来使用。  </p>
+
+        <h3 id="2-2-Exchange-交换机"   >
+          <a href="#2-2-Exchange-交换机" class="heading-link"><i class="fas fa-link"></i></a><a href="#2-2-Exchange-交换机" class="headerlink" title="2.2 Exchange(交换机)"></a>2.2 Exchange(交换机)</h3>
+      <ul>
+<li><p>2.2.1 默认交换机（default exchange）<br>&amp;emsp;&amp;emsp;默认交换机是一个由消息队列预先声明好的没有名字的直连交换机,对于默认交换机而言，新建的每一个队列都会自动的绑定到这个默认交换机上面，绑定的路由键（routing key）名称和队列名称相同。<br>&amp;emsp;&amp;emsp;例如：当声明一个“queueA”的队列，AMQP会自动地将其绑定到默认交换机上面，同时绑定的路由名称键名也是“queueA”，因此当携带有一样的routing key的消息来时就会被路由到queueA的队列中。  </p>
+</li>
+<li><p>2.2.2 直连交换机播路由（unicast routing）。<br>&amp;emsp;&amp;emsp;1）将一个队列A绑定到某个交换机上面，赋予该绑定一个绑定键（binding key），为R<br>&amp;emsp;&amp;emsp;2）当一个携带路由键R的消息来到交换机，就会把该消息发送到队列A中。<br><img src="https://bevishe.oss-cn-hangzhou.aliyuncs.com/img/20220118150124.png" alt="20220118150124"><br>&amp;emsp;&amp;emsp;直连交换机的队列通常是循环发送任务给多个消费者，轮询的方式。</p>
+</li>
+<li><p>2.2.3 扇形交换机<br><img src="https://bevishe.oss-cn-hangzhou.aliyuncs.com/img/20220118151156.png" alt="20220118151156"><br>&amp;emsp;&amp;emsp;扇形交换机（funout exchange）将消息路由绑定给到他身上所有的队列中，而不会去管路由键（routing key），如果N个队列绑定到一个扇形路由器上面，当有消息发送到这个路由器上时，交换机会将消息发送到所有的N个队列中。扇形交换机用来处理消息的广播路由（broadcast routing）。<br>&amp;emsp;&amp;emsp;由于扇形路由器的这种特性，和一些的使用场景非常像：<br>&amp;emsp;&amp;emsp;1）大规模用户在线游戏使用它来处理排行榜更新等全局事件；<br>&amp;emsp;&amp;emsp;2）体育新闻网站用来近乎实时地将比分更新到移动客户端；<br>&amp;emsp;&amp;emsp;3）分发系统用它来广播各种状态和配置更新；  </p>
+</li>
+<li><p>2.2.4 主题交换机<br>&amp;emsp;&amp;emsp;主题交换机（topic exchage）与之前的之前交换机较复杂，但是可以处理的场景也更加灵活。本质还是一个直连交换机，同样需要将传来的消息中的routing key和队列绑定的binding key进行对应，不过可以对其中的key进行如正则匹配的处理。将原有的一个key按照’.’进行切分成多个单词，每个单词可以用“<em>”，“#”这两个关键字进行匹配。<br>&amp;emsp;&amp;emsp;其中的</em>表示一个单词，#表示匹配零个或者多个单词。<br>如：主题的定义是根据动物不同特点来分发 速度.颜色.名称.<br>&amp;emsp;&amp;emsp;队列A根据binding key：“*.red.<em>”绑定到交换机上<br>&amp;emsp;&amp;emsp;队列B根据binding key：“low.#”和“</em>.yellow.*”绑定到主题交换机上面<br>使用上面的方法，可以将所有的红色动物的消息发送到队列A中，将所有的跑到慢的动物和黄色的动物消息发送到队列B中来消费。<br><img src="https://bevishe.oss-cn-hangzhou.aliyuncs.com/img/20220118152332.png" alt="20220118152332"></p>
+</li>
+</ul>
+
+        <h3 id="2-3-Queue-队列"   >
+          <a href="#2-3-Queue-队列" class="heading-link"><i class="fas fa-link"></i></a><a href="#2-3-Queue-队列" class="headerlink" title="2.3 Queue 队列"></a>2.3 Queue 队列</h3>
+      <p>&amp;emsp;&amp;emsp;AMQP中的队列跟其他消息队列中的队列是相似的，其中存储着需要消费的消息。  </p>
+<ul>
+<li><p>2.3.1 队列属性<br>队列属性和交换机共享一些属性，但也有一些是其特有的<br>1）Name<br>2）Durable 队列持久化，消息队列重启后队列是否依旧存在，注意只可以保证其队列的持久化，不能保证队列中原还没有消费的消息也持久化<br>3）Exclusive 只被一个连接，当连接关闭时队列即被销毁<br>4）Auto-delete 当最后一个消费者退订后即被销毁<br>5）Arauments 一些消息代理用它来完成类似与TTL的某些额外功能  </p>
+</li>
+<li><p>2.3.2 队列的创建<br>&amp;emsp;&amp;emsp;队列在声明后才可以被使用，如果一个队列开始不存在在声明时会对它进行创建，如果队列已经存在了而且和声明的属性相同，那么这个声明就不会对原有的队列有任何影响，如果和原有的队列属性有差异，那么就会抛出406的通道异常。  </p>
+</li>
+<li><p>2.3.3 队列持久化<br>&amp;emsp;&amp;emsp;持久化话队列会将队列的信息存储在硬盘上，当消息代理broker重启的时候，会依旧存在，没有被持久化队列被称之为暂存队列Transient queues,并不是所有的场景和案例都需要持久化队列。<br>&amp;emsp;&amp;emsp;注意：持久化队列并不会将路由到当前都列的消息也持久化。</p>
+</li>
+</ul>
+
+        <h3 id="2-4-消费者Consumer"   >
+          <a href="#2-4-消费者Consumer" class="heading-link"><i class="fas fa-link"></i></a><a href="#2-4-消费者Consumer" class="headerlink" title="2.4 消费者Consumer"></a>2.4 消费者Consumer</h3>
+      <p>&amp;emsp;&amp;emsp;消息如果只是被存储在队列中不被消费是没有意义的，在amqp 0-9-1模型中，有两种途径可以让消费者来消费队列中的消息：<br>1）将消息投递给消费者应用（push API）<br>2) 消费者应用主动地获取消息（pull API）<br>&amp;emsp;&amp;emsp;使用push的消费者应用需要明确表达它对某个特定的队列感兴趣，可以规定为该队列注册了一个消费者，或者叫该消费者订阅了一个队列，注意一个队列可以注册多个消费者，也可以注册一个独享的消费者，当独享消费者存在时，其他的消费者即被排除在外。<br>&amp;emsp;&amp;emsp;每个消费者都有一个消费者标签的标识符，可以用来退订消息，消费者标签实际上就是一个字符串。  </p>
+
+        <h3 id="2-5-消息确认"   >
+          <a href="#2-5-消息确认" class="heading-link"><i class="fas fa-link"></i></a><a href="#2-5-消息确认" class="headerlink" title="2.5 消息确认"></a>2.5 消息确认</h3>
+      <ul>
+<li><p>2.5.1 消息确认<br>&amp;emsp;&amp;emsp;由于AMQP是一个网络协议，在处理消息的时候会碰见各种因为网络问题消费丢掉的问题，所以需要我对消息进行确认。在AMQP中有两种方法来对消息进行确认：<br>&amp;emsp;&amp;emsp;1）自动确认模式：当消息代理broker将消息发送后立即删除消息,basic.deliver或者basic.get-ok。<br>&amp;emsp;&amp;emsp;2）显示确认模式：当broker发送一个消息之后，需要等待一个确认回执acknowledgement后再删除消息,basic.ack。<br>&amp;emsp;&amp;emsp;如果是第二种方法，当一个消费者当在未发送回执的情况下挂掉了，那么broker代理会将消息重新投递给另外的一个消费者，如果没有其他的消费者，消息代理会等待下一个订阅当前队列的消费者，然后再次尝试投递。  </p>
+</li>
+<li><p>2.5.2 拒绝消息<br>&amp;emsp;&amp;emsp;当一个消费者拒绝消息之后，消费者可以告诉消息代理如何处理这条消息-销毁或者重新返回队列中。<br>&amp;emsp;&amp;emsp;注意：当只有一个消费者订阅当前队列，确实不要因为消费者拒绝了消息放回在队列中又重新返回给这个消费者，造成不断循环拒绝放回。<br>&amp;emsp;&amp;emsp;在AMQP中,basic.reject方法用来拒绝消息的操作，但是有个限制不能用来拒绝多个带有确认回执的消息，如果使用的是RabbitMQ可以使用nacks来解决这个问题。  </p>
+</li>
+<li><p>2.5.3 预读消息<br>&amp;emsp;&amp;emsp;在多个消费者共享一个队列的案例中，明确指定在收到下一个确认回执前每个消费者一次可以接受多少条消息是非常有用的，可以在视图批量发布消息的时候起到简单的负载均衡和提供吞吐量的作用。RabbitMQ只支持通道级的预取计数，而不是连接级的预取。   </p>
+</li>
+<li><p>2.5.4 消息属性<br>&amp;emsp;&amp;emsp;AMQP模型中的消息是带有属性的，常见的有以下这些：  </p>
+<div class="table-container"><table>
+<thead>
+<tr>
+<th>类型</th>
+<th>字段</th>
+<th>名称</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Content</td>
+<td>type</td>
+<td>内容类型</td>
+</tr>
+<tr>
+<td>Content</td>
+<td>encoding</td>
+<td>内容编码</td>
+</tr>
+<tr>
+<td>Routing</td>
+<td>key</td>
+<td>路由键</td>
+</tr>
+<tr>
+<td>Delivery</td>
+<td>mode</td>
+<td>persistent or not</td>
+</tr>
+<tr>
+<td>Message</td>
+<td>priority</td>
+<td>消息优先权</td>
+</tr>
+<tr>
+<td>Message</td>
+<td>publishing</td>
+<td>timestamp</td>
+</tr>
+<tr>
+<td>Expiration</td>
+<td>period</td>
+<td>消息有效期</td>
+</tr>
+<tr>
+<td>Publisher</td>
+<td>application id</td>
+<td>发布应用的id</td>
+</tr>
+</tbody></table></div>
+</li>
+<li><p>2.5.5 消息主体<br>&amp;emsp;&amp;emsp;AMQP的消息除了属性之外还有一个有效载荷Payload消息实际携带的数据，被AMQP代理当成一个不透明的字节数组来对待。消息代理不会检查或者修改有效载荷，消息可以只包含属性而不携带任何有效载荷，通常会使用类似JSON这种序列化的格式数据，为了节省传输的数据大小，协议为缓冲器会和MessagePack将结构化的数据序列化，以便以消息的有效载荷方式来传递。通常会用content-type和content-encoding这两个字段来与消息沟通有效载荷的辨识工作。  </p>
+</li>
+<li><p>2.5.6 消息持久化<br>&amp;emsp;&amp;emsp;消息也能够被持久化，AMQP会将消息保存到磁盘上，如果代理重启，系统会确认保存的消息未丢失。<br>&amp;emsp;&amp;emsp;需要注意的是：简单的对队列持久化并不会让其中的消息也持久化，凶啊系的持久化需要设置消息自己的模式persistence mode,将消息持久化之后自然会影响性能，所以需要在根据自己的情景来设置是否需要对消息进行持久化，健壮性的增加自然需要牺牲一下性能。    </p>
+</li>
+<li><p>2.5.7 连接<br>&amp;emsp;&amp;emsp;AMQP的连接通常是长连接，AMQP是使用TCP提供可靠的应用层协议。AMQP使用认证机制并且提供TLS保护，当一个应用不需要连接到AMQP代理的时候，只需要释放到AMQP的连接，而不是直接将TCP连接关闭。  </p>
+</li>
+<li><p>2.5.8 通道<br>&amp;emsp;&amp;emsp;在有些系统中需要与AMQP建立多个连接，但是同时开启多个TCP连接会消耗很多资源，因此AMQP提供了通道Channels来处理多连接，可以将通道看成一个TCP连接的多个轻量化连接。<br>&amp;emsp;&amp;emsp;在涉及多线程或者多进程的系统中，为每个线程开启一个通道是常见的，并且这些通道之间不会被共享资源。   </p>
+</li>
+<li><p>2.5.9 虚拟主机vhost</p>
+</li>
+</ul>
+</div><footer class="post-footer"><div class="post-ending ending"><div class="ending__text">------ 本文结束，感谢您的阅读 ------</div></div><div class="post-copyright copyright"><div class="copyright-author"><span class="copyright-author__name">本文作者: </span><span class="copyright-author__value"><a href="http://bevishe.github.io">BevisHe</a></span></div><div class="copyright-link"><span class="copyright-link__name">本文链接: </span><span class="copyright-link__value"><a href="http://bevishe.github.io/2022/02/17/MQ%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97%EF%BC%882%EF%BC%89RabbitMQ-AMQP/">http://bevishe.github.io/2022/02/17/MQ%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97%EF%BC%882%EF%BC%89RabbitMQ-AMQP/</a></span></div><div class="copyright-notice"><span class="copyright-notice__name">版权声明: </span><span class="copyright-notice__value">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh-cn" rel="external nofollow" target="_blank">BY-NC-SA</a> 许可协议。转载请注明出处！</span></div></div><div class="post-tags"><span class="post-tags-item"><span class="post-tags-item__icon"><i class="fas fa-tag"></i></span><a class="post-tags-item__link" href="http://bevishe.github.io/tags/rabbitMq/">rabbitMq</a></span></div><nav class="post-paginator paginator"><div class="paginator-prev"><a class="paginator-prev__link" href="/2022/02/17/MQ%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97%EF%BC%881%EF%BC%89/"><span class="paginator-prev__icon"><i class="fas fa-angle-left"></i></span><span class="paginator-prev__text">MQ消息队列（1）</span></a></div><div class="paginator-next"><a class="paginator-next__link" href="/2022/02/17/MQ%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97%EF%BC%883%EF%BC%89RabbitMQ/"><span class="paginator-prev__text">MQ消息队列（3）RabbitMQ</span><span class="paginator-next__icon"><i class="fas fa-angle-right"></i></span></a></div></nav></footer></div></div></div><div class="sidebar-wrap" id="sidebar-wrap"><aside class="sidebar" id="sidebar"><div class="sidebar-nav"><span class="sidebar-nav-toc current">文章目录</span><span class="sidebar-nav-ov">站点概览</span></div><section class="sidebar-toc"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-RabbitMQ%E6%A6%82%E8%BF%B0"><span class="toc-number">1.</span> <span class="toc-text">
+          1.RabbitMQ概述</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-AMQP%EF%BC%88Advanced-Message-Queuing-Protocol%EF%BC%89%E9%AB%98%E7%BA%A7%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97%E5%8D%8F%E8%AE%AE"><span class="toc-number">2.</span> <span class="toc-text">
+          2.AMQP（Advanced Message Queuing Protocol）高级消息队列协议</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-AMQP%E5%8D%8F%E8%AE%AE%E7%AE%80%E4%BB%8B"><span class="toc-number">2.1.</span> <span class="toc-text">
+          2.1 AMQP协议简介</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-Exchange-%E4%BA%A4%E6%8D%A2%E6%9C%BA"><span class="toc-number">2.2.</span> <span class="toc-text">
+          2.2 Exchange(交换机)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-3-Queue-%E9%98%9F%E5%88%97"><span class="toc-number">2.3.</span> <span class="toc-text">
+          2.3 Queue 队列</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-4-%E6%B6%88%E8%B4%B9%E8%80%85Consumer"><span class="toc-number">2.4.</span> <span class="toc-text">
+          2.4 消费者Consumer</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-5-%E6%B6%88%E6%81%AF%E7%A1%AE%E8%AE%A4"><span class="toc-number">2.5.</span> <span class="toc-text">
+          2.5 消息确认</span></a></li></ol></li></ol></section><!-- ov = overview--><section class="sidebar-ov hide"><div class="sidebar-ov-author"><div class="sidebar-ov-author__avatar"><img class="sidebar-ov-author__avatar_img" src="/images/icons/stun-logo.svg" alt="avatar"></div><p class="sidebar-ov-author__text">hello world</p></div><div class="sidebar-ov-state"><a class="sidebar-ov-state-item sidebar-ov-state-item--categories" href="/categories/"><div class="sidebar-ov-state-item__count">11</div><div class="sidebar-ov-state-item__name">分类</div></a><a class="sidebar-ov-state-item sidebar-ov-state-item--tags" href="/tags/"><div class="sidebar-ov-state-item__count">11</div><div class="sidebar-ov-state-item__name">标签</div></a></div><div class="sidebar-ov-cc"><a href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh-cn" target="_blank" rel="noopener" data-popover="知识共享许可协议" data-popover-pos="up"><img src="/images/cc-by-nc-sa.svg"></a></div></section><div class="sidebar-reading"><div class="sidebar-reading-info"><span class="sidebar-reading-info__text">你已阅读了 </span><span class="sidebar-reading-info__num">0</span><span class="sidebar-reading-info__perc">%</span></div><div class="sidebar-reading-line"></div></div></aside></div><div class="clearfix"></div></div></main><footer class="footer" id="footer"><div class="footer-inner"><div><span>Copyright © 2022</span><span class="footer__icon"><i class="fas fa-heart"></i></span><span>BevisHe</span></div><div><span>由 <a href="http://hexo.io/" title="Hexo" target="_blank" rel="noopener">Hexo</a> 强力驱动</span><span> v6.2.0</span><span class="footer__devider">|</span><span>主题 - <a href="https://github.com/liuyib/hexo-theme-stun/" title="Stun" target="_blank" rel="noopener">Stun</a></span><span> v2.7.0</span></div></div></footer><div class="loading-bar" id="loading-bar"><div class="loading-bar__progress"></div></div><div class="back2top" id="back2top"><span class="back2top__icon"><i class="fas fa-rocket"></i></span></div></div><div class="search-mask"></div><div class="search-popup"><span class="search-close"></span><div class="search-input"><input placeholder="搜索文章（支持多关键词，请用空格分隔）"></div><div class="search-results"></div></div><script src="https://cdn.jsdelivr.net/npm/jquery@v3.4.1/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-animate@1.5.2/velocity.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-animate@1.5.2/velocity.ui.min.js"></script><script>function initSearch() {
+  var isXML = true;
+  var search_path = 'search.json';
+
+  if (!search_path) {
+    search_path = 'search.xml';
+  } else if (/json$/i.test(search_path)) {
+    isXML = false;
+  }
+
+  var path = '/' + search_path;
+  $.ajax({
+    url: path,
+    dataType: isXML ? 'xml' : 'json',
+    async: true,
+    success: function (res) {
+      var datas = isXML ? $('entry', res).map(function () {
+        // 将 XML 转为 JSON
+        return {
+          title: $('title', this).text(),
+          content: $('content', this).text(),
+          url: $('url', this).text()
+        };
+      }).get() : res;
+      var $input = $('.search-input input');
+      var $result = $('.search-results');
+      // 搜索对象（标题、内容）的权重，影响显示顺序
+      var WEIGHT = { title: 100, content: 1 };
+      var searchPost = function () {
+        var searchText = $input.val().toLowerCase().trim();
+        // 根据空白字符分隔关键字
+        var keywords = searchText.split(/[\s]+/);
+        // 搜索结果
+        var matchPosts = [];
+
+        // 有多个关键字时，将原文字整个保存下来
+        if (keywords.length > 1) {
+          keywords.push(searchText);
+        }
+        // 防止未输入字符时搜索
+        if (searchText.length > 0) {
+          datas.forEach(function (data) {
+            var isMatch  = false;
+            // 没有标题的文章使用预设的 i18n 变量代替
+            var title = (data.title && data.title.trim()) || '[ 文章无标题 ]';
+            var titleLower = title && title.toLowerCase();
+            // 删除 HTML 标签 和 所有空白字符
+            var content = data.content && data.content.replace(/<[^>]+>/g, '');
+            var contentLower = content && content.toLowerCase();
+            // 删除重复的 /
+            var postURL = data.url && decodeURI(data.url).replace(/\/{2,}/g, '/');
+            // 标题中匹配到的关键词
+            var titleHitSlice = [];
+            // 内容中匹配到的关键词
+            var contentHitSlice = [];
+
+            keywords.forEach(function (keyword) {
+              /**
+              * 获取匹配的关键词的索引
+              * @param {String} keyword 要匹配的关键字
+              * @param {String} text 原文字
+              * @param {Boolean} caseSensitive 是否区分大小写
+              * @param {Number} weight 匹配对象的权重。权重大的优先显示
+              * @return {Array}
+              */
+              function getIndexByword (word, text, caseSensitive, weight) {
+                if (!word || !text) {
+                  return [];
+                };
+
+                var startIndex = 0; // 每次匹配的开始索引
+                var index = -1;     // 匹配到的索引值
+                var result = [];    // 匹配结果
+
+                if (!caseSensitive) {
+                  word = word.toLowerCase();
+                  text = text.toLowerCase();
+                }
+
+                while((index = text.indexOf(word, startIndex)) !== -1) {
+                  var hasMatch = false;
+                  // 索引位置相同的关键词，保留长度较长的
+                  titleHitSlice.forEach(function (hit) {
+                    if (hit.index === index && hit.word.length < word.length) {
+                      hit.word = word;
+                      hasMatch = true;
+                    }
+                  });
+                  startIndex = index + word.length;
+                  !hasMatch && result.push({ index: index, word: word, weight: weight });
+                }
+                return result;
+              }
+              titleHitSlice = titleHitSlice.concat(getIndexByword(keyword, titleLower, false, WEIGHT.title));
+              contentHitSlice = contentHitSlice.concat(getIndexByword(keyword, contentLower, false, WEIGHT.content));
+            });
+
+            var hitTitle = titleHitSlice.length;
+            var hitContent = contentHitSlice.length;
+
+            if (hitTitle > 0 || hitContent > 0) {
+              isMatch = true;
+            }
+            if (isMatch) {
+              ;[titleHitSlice, contentHitSlice].forEach(function (hit) {
+                // 按照匹配文字的索引的递增顺序排序
+                hit.sort(function (left, right) {
+                  return left.index - right.index;
+                });
+              });
+              /**
+              * 给文本中匹配到的关键词添加标记，从而进行高亮显示
+              * @param {String} text 原文本
+              * @param {Array} hitSlice 匹配项的索引信息
+              * @param {Number} start 开始索引
+              * @param {Number} end 结束索引
+              * @return {String}
+              */
+              function highlightKeyword (text, hitSlice, start, end) {
+                if (!text || !hitSlice || !hitSlice.length) {
+                  return;
+                }
+
+                var result = '';
+                var startIndex = start;
+                var endIndex = end;
+                hitSlice.forEach(function (hit) {
+                  if (hit.index < startIndex) {
+                    return;
+                  }
+
+                  var hitWordEnd = hit.index + hit.word.length;
+                  result += text.slice(startIndex, hit.index);
+                  result += '<b>' + text.slice(hit.index, hitWordEnd) + '</b>';
+                  startIndex = hitWordEnd;
+                });
+                result += text.slice(startIndex, endIndex);
+                return result;
+              }
+
+              var postData = {};
+              // 文章总的搜索权重
+              var postWeight = titleHitSlice.length * WEIGHT.title + contentHitSlice.length * WEIGHT.content;
+              // 标记匹配关键词后的标题
+              var postTitle = highlightKeyword(title, titleHitSlice, 0, title.length) || title;
+              // 标记匹配关键词后的内容
+              var postContent;
+              // 显示内容的长度
+              var SHOW_WORD_LENGTH = 200;
+              // 命中关键词前的字符显示长度
+              var SHOW_WORD_FRONT_LENGTH = 20;
+              var SHOW_WORD_END_LENGTH = SHOW_WORD_LENGTH - SHOW_WORD_FRONT_LENGTH;
+
+              // 截取匹配的第一个字符，前后共 200 个字符来显示
+              if (contentHitSlice.length > 0) {
+                var firstIndex = contentHitSlice[0].index;
+                var start = firstIndex > SHOW_WORD_FRONT_LENGTH ? firstIndex - SHOW_WORD_FRONT_LENGTH : 0;
+                var end = firstIndex + SHOW_WORD_END_LENGTH;
+                postContent = highlightKeyword(content, contentHitSlice, start, end);
+              } else { // 未匹配到内容，直接截取前 200 个字符来显示
+                postContent = content.slice(0, SHOW_WORD_LENGTH);
+              }
+              postData.title = postTitle;
+              postData.content = postContent;
+              postData.url = postURL;
+              postData.weight = postWeight;
+              matchPosts.push(postData);
+            }
+          });
+        }
+
+        var resultInnerHtml = '';
+        if (matchPosts.length) {
+          // 按权重递增的顺序排序，使权重大的优先显示
+          matchPosts.sort(function (left, right) {
+            return right.weight - left.weight;
+          });
+          resultInnerHtml += '<ul>';
+          matchPosts.forEach(function (post) {
+            resultInnerHtml += '<li><a class="search-results-title" href="' + post.url + '">';
+            resultInnerHtml += post.title;
+            resultInnerHtml += '</a><div class="search-results-content">';
+            resultInnerHtml += post.content;
+            resultInnerHtml += '</div></li>';
+          });
+          resultInnerHtml += '</ul>';
+        } else {
+          resultInnerHtml += '<div class="search-results-none"><i class="far fa-meh"></i></div>';
+        }
+        $result.html(resultInnerHtml);
+      };
+      $input.on('input', searchPost);
+      $input.on('keyup', function (e) {
+        if (e.keyCode === Stun.utils.codeToKeyCode('Enter')) {
+          searchPost();
+        }
+      });
+    }
+  });
+}
+
+function closeSearch () {
+  $('body').css({ overflow: 'auto' });
+  $('.search-popup').css({ display: 'none' });
+  $('.search-mask').css({ display: 'none' });
+}
+
+window.addEventListener('DOMContentLoaded', function () {
+  Stun.utils.pjaxReloadLocalSearch = function () {
+    $('.header-nav-search').on('click', function (e) {
+      e.stopPropagation();
+      $('body').css('overflow', 'hidden');
+      $('.search-popup')
+        .velocity('stop')
+        .velocity('transition.expandIn', {
+          duration: 300,
+          complete: function () {
+            $('.search-popup input').focus();
+          }
+        });
+      $('.search-mask')
+        .velocity('stop')
+        .velocity('transition.fadeIn', {
+          duration: 300
+        });
+
+      initSearch();
+    });
+    $('.search-mask, .search-close').on('click', function () {
+      closeSearch();
+    });
+    $(document).on('keydown', function (e) {
+      // Escape <=> 27
+      if (e.keyCode === Stun.utils.codeToKeyCode('Escape')) {
+        closeSearch();
+      }
+    });
+  };
+
+  Stun.utils.pjaxReloadLocalSearch();
+}, false);
+
+function safeOpenUrl(url) {
+  var newTab = window.open();
+  newTab.opener = null;
+  newTab.location = url;
+}
+
+function extSearch(engine) {
+  var engines = {
+    google: 'https://www.google.com/search?q=',
+    bing: 'https://cn.bing.com/search?q=',
+    baidu: 'https://www.baidu.com/s?ie=UTF-8&wd=',
+  };
+  var host = window.location.host;
+  var query = $('.search-input input').val().toLowerCase().trim();
+  var uri = engines[engine] + query + ' site:' + host;
+
+  if (query) {
+    safeOpenUrl(uri);
+  } else {
+    Stun.utils.popAlert('warning', '请输入字符');
+  }
+}
+
+var assistSearchList = window.CONFIG.assistSearch;
+
+if (Array.isArray(assistSearchList)) {
+  assistSearchList.forEach(function (name) {
+    document.querySelector('.search-btns-item--' + name).addEventListener('click', function () {
+      extSearch(name);
+    }, false);
+  });
+}</script><script src="/js/utils.js?v=2.7.0"></script><script src="/js/stun-boot.js?v=2.7.0"></script><script src="/js/scroll.js?v=2.7.0"></script><script src="/js/header.js?v=2.7.0"></script><script src="/js/sidebar.js?v=2.7.0"></script><script type="application/json" src="/search.json"></script></body></html>
